@@ -1,3 +1,4 @@
+{{- if .Values.enabled -}}
 apiVersion: v1
 kind: Pod
 metadata:
@@ -6,11 +7,17 @@ metadata:
     app: aggregator
 spec:
   serviceAccountName: {{ if .Values.rbac.create }}aggregator{{ else }}"{{ .Values.rbac.serviceAccountName }}"{{ end }}
+  imagePullSecrets:
+  - name: devdocker-registrykey
   containers:
   - name: aggregator
     image: endianogino/aggregator:{{ .Values.images.aggregatorVersion }}
+    securityContext:
+      runAsUser: 0
+      readOnlyRootFilesystem: false
     imagePullPolicy: {{ .Values.imagePullPolicy }}
     args:
     - -max-replicas={{ .Values.aggregator.maxReplicas }}
     - -logtostderr
     - -v={{ .Values.aggregator.logLevel }}
+{{- end -}}

@@ -1,20 +1,27 @@
-apiVersion: v1
-kind: ReplicationController
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: loadbots
 spec:
   replicas: 1
   selector:
-    app: loadbots
+    matchLabels:
+      app: loadbots
   template:
     metadata:
       name: loadbots
       labels:
         app: loadbots
     spec:
+      serviceAccountName: {{ if .Values.rbac.create }}aggregator{{ else }}"{{ .Values.rbac.serviceAccountName }}"{{ end }}
+      imagePullSecrets:
+      - name: devdocker-registrykey
       containers:
       - name: loadbots
         image: endianogino/vegeta-server:{{ .Values.images.loadbotVersion }}
+        securityContext:
+          runAsUser: 0
+          readOnlyRootFilesystem: false
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         args:
         - -host=webserver
@@ -29,3 +36,4 @@ spec:
         resources:
           requests:
             cpu: {{ .Values.cpuRequests.loadbot }}
+            memory: {{ .Values.memRequests.loadbot }}

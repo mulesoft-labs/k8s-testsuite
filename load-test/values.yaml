@@ -5,8 +5,12 @@ images:
   aggregatorVersion: "1.0"
 
 cpuRequests:
-  loadbot: "100m"
-  webserver: "100m"
+  loadbot: "250m"
+  webserver: "250m"
+
+memRequests:
+  loadbot: "800M"
+  webserver: "800M"
 
 rbac:
   create: true
@@ -17,6 +21,8 @@ aggregator:
   logLevel: 2
 
 loadbot:
-  rate: 1000
-  workers: 10
-  duration: 1s
+  rate: 1
+  workers: 1
+  duration: 10s
+
+enabed: false

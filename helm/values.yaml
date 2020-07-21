@@ -1,0 +1,33 @@
+image:
+  name: core-paas-istio
+  registry: artifacts.msap.io
+  org: mulesoft
+  tag: latest
+  pullSecretName: devdocker-registrykey
+
+global:
+  product: core-paas
+  component: istio
+  asset: test
+  imagePullPolicy: IfNotPresent
+  region: us-west-1
+  environment: cpdev
+  cluster: iload2
+
+test:
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  label: istio=test
+  client:
+    name: istio-demo-client
+    label: app=demo-client
+    image: artifacts.msap.io/mulesoft/core-paas-base-image-ubuntu:v4.0.8
+  server:
+    name: istio-demo-server
+    label: app=demo-server
+    image: artifacts.msap.io/mulesoft/core-paas-istio-test:v0.4.24-2.istio-test

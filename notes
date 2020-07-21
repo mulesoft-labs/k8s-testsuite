@@ -1,0 +1,37 @@
+Hello everyone!
+today Tariq and I will be giving you a sneak peek of the The Core PaaS service mesh.
+The Core PaaS Service mesh which is built on top of istio is going to add tons of network features for teams.
+mTLS, rate limiting, transaction tracing and more can all be configured quickly and easily
+And the best part? there are no application code changes required!
+=
+Hey that is a lot of buzzwords how about you tell them how it works?
+----
+The mesh works by automatically attaching a loyal sidecar to your service.
+This sidecar is configured to intercept all outgoing and incoming traffic via iptables.
+
+And this traffic can be configured easily via yaml files using our existing helm tooling.
+
+For example: If you wanted to try out rate limiting. You simply create an object kind: EnvoyFilter apiVersion: networking.istio.io/v1alpha3 …
+=
+YOOO, how about we just show them?
+=
+Haha Oo yea, good idea!
+
+
+
+Server / client prints headers
+sidecar
+curl istio-demo-server
+
+a big feature show mTLS
+
+vim helm/templates/mtls.yaml
+
+* headers
+vim helm/templates/features.yaml
+
+Not a fan of cats
+
+T: Nice, party tricks
+
+And this is just a small sample of what the service mesh will be able to do with any application changes.

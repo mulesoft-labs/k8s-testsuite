@@ -1,0 +1,6 @@
+dependencies:
+- name: core-paas-base
+  repository: https://s3-us-west-2.amazonaws.com/mulesoft-ci-helm-chart-repository/stable/core-paas
+  version: 4.12.7
+digest: sha256:b583c3671e9dd132bec75514fed9528d93be8aef8c54ff2b06d1a5ecec01d302
+generated: "2020-06-23T02:26:45.315213-04:00"

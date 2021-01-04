@@ -1,45 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    {{ include "base.labels.mulesoft.test" . | indent 4 | trim }}
-    app: istio-demo-client
-    istio: demo
-  name: {{ .Values.test.client.name }}
-spec:
-  selector:
-    matchLabels:
-      app: istio-demo-client
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        {{ include "base.labels.mulesoft.test" . | indent 8 | trim }}
-        app: istio-demo-client
-        istio: demo
-      name: {{ .Values.test.client.name }}
-    spec:
-      {{ include "base.image.pull-secret-name" . | indent 6 | trim }}
-      containers:
-      - name: {{ .Values.test.client.name }}
-        {{- with .Values.test }}
-        {{ include "base.resources.limits" . | indent 8 |trim }}
-        {{- end }}
-        command:
-        - /bin/bash
-        - -c
-        - "while true; do sleep 1; curl -i -s $TARGET/cat; echo; done"
-        env:
-        - name: TARGET
-          value: {{ .Values.test.server.name }}:80
-        image: {{ .Values.test.client.image }}
-        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-        securityContext:
-          runAsUser: 2020
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
+  annotations:
   labels:
     {{ include "base.labels.mulesoft.test" . | indent 4 | trim }}
     app: istio-demo-server
@@ -53,6 +15,7 @@ spec:
   template:
     metadata:
       labels:
+        # sidecar.istio.io/inject: "false"
         {{ include "base.labels.mulesoft.test" . | indent 8 | trim }}
         app: istio-demo-server
         istio: demo
@@ -65,6 +28,7 @@ spec:
         {{ include "base.resources.limits" . | indent 8 |trim }}
         {{- end }}
         command: ["/bin/bash", "-c", "go run /etc/files/server.go "]
+        # command: ["/bin/bash", "-c", "cd /proxy; go run /proxy/proxy.go; sleep 999999"]
         image: {{ .Values.test.server.image }}
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         securityContext:
@@ -75,66 +39,47 @@ spec:
         volumeMounts:
           - name: files
             mountPath: /etc/files
+          - name: proxy
+            mountPath: /proxy
       volumes:
         - name: files
           configMap:
             name: istio-demo-server-code
             defaultMode: 511
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  annotations:
-    sidecar.istio.io/inject: "false"
-  labels:
-    {{ include "base.labels.mulesoft.test" . | indent 4 | trim }}
-    app: istio-demo-cat
-    istio: demo
-  name: istio-demo-cat
-spec:
-  selector:
-    matchLabels:
-      app: istio-demo-cat
-  replicas: 1
-  template:
-    metadata:
-      annotations:
-        sidecar.istio.io/inject: "false"
-      labels:
-        {{ include "base.labels.mulesoft.test" . | indent 8| trim }}
-        app: istio-demo-cat
-        istio: demo
-      name: {{ .Values.test.client.name }}
-    spec:
-      {{ include "base.image.pull-secret-name" . | indent 6 | trim }}
-      containers:
-      - name: istio-demo-cat
-        {{- with .Values.test }}
-        {{ include "base.resources.limits" . | indent 8 |trim }}
-        {{- end }}
-        command:
-        - /bin/bash
-        - -c
-        - "sleep 100000"
-        image: {{ .Values.test.client.image }}
-        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-        securityContext:
-          runAsUser: 2020
+        - name: proxy
+          configMap:
+            name: istio-demo-proxy-code
+            defaultMode: 511
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ .Values.test.server.name }}
+  annotations:
+    cloud.google.com/load-balancer-type: Internal
+    service.beta.kubernetes.io/aws-load-balancer-access-log-emit-interval: "5"
+    service.beta.kubernetes.io/aws-load-balancer-access-log-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-access-log-s3-bucket-name: cp-lb-logs-kdev-us-east-1
+    service.beta.kubernetes.io/aws-load-balancer-access-log-s3-bucket-prefix: stable5-us-east-1/core-paas/istio-test
+    service.beta.kubernetes.io/aws-load-balancer-additional-resource-tags: OWNER=core-paas,PRODUCT=core-paas,SERVICE=istio-test,KubernetesCluster=stable5-us-east-1,Name=istio-test,app=istio-test,app-guid=core-paas-istio-test,chart=core-paas-istio-test,cluster=stable5-us-east-1,company=mulesoft,component=istio-test,component-asset=istio-test,environment=kdev,heritage=Tiller,product=core-paas,product-component=core-paas-istio-test,region=us-east-1,release=core-paas-istio-test
+    service.beta.kubernetes.io/aws-load-balancer-connection-draining-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-connection-draining-timeout: "60"
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "60"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "True"
+    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    service.beta.kubernetes.io/openstack-internal-load-balancer: "true"
   labels:
     {{ include "base.labels.mulesoft.test" . | indent 4 | trim }}
     istio: demo
     app: istio-demo-server
 spec:
-  replicas: 1
+  externalTrafficPolicy: Cluster
+  type: LoadBalancer
   ports:
     - protocol: TCP
       port: 80
-      name: http
+      name: application
   selector:
     istio: demo
     app: istio-demo-server

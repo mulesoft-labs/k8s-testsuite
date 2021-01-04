@@ -1,26 +1,26 @@
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: {{ .Values.test.server.name }}
-  labels:
-    istio: demo
-    app: demo-server
-spec:
-  hosts:
-  - {{ .Values.test.server.name }}
-  http:
-  - route:
-    - destination:
-        host: {{ .Values.test.server.name }}
-      headers:
-        request:
-          set:
-            x-cool-new-feature: "enable"
-    match:
-    - uri:
-        prefix: /cat
-    rewrite:
-       uri: /500
-    retries:
-      attempts: 5
-      retryOn: 5xx
+# apiVersion: networking.istio.io/v1alpha3
+# kind: VirtualService
+# metadata:
+#   name: {{ .Values.test.server.name }}
+#   labels:
+#     istio: demo
+#     app: demo-server
+# spec:
+#   hosts:
+#   - {{ .Values.test.server.name }}
+#   http:
+#   - route:
+#     - destination:
+#         host: {{ .Values.test.server.name }}
+#       headers:
+#         request:
+#           set:
+#             x-cool-new-feature: "enable"
+#     match:
+#     - uri:
+#         prefix: /cat
+#     rewrite:
+#        uri: /500
+#     retries:
+#       attempts: 5
+#       retryOn: 5xx
